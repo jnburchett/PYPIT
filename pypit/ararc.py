@@ -275,6 +275,14 @@ def setup_param(slf, sc, det, fitsdict):
             arcparam['b1']= 1./arcparam['disp']/slf._msarc[det-1].shape[0]
         else:
             msgs.error('Not ready for this disperser {:s}!'.format(disperser))
+    elif sname=='alfosc':
+        lamps=['HeI','NeI','ThI','ArI'] # Does ThI exist? /BMJ
+        if disperser == 'Grism_#4':
+            arcparam['n_first']=1  #
+            arcparam['disp']=3.3  # Ang per pixel (unbinned)
+            arcparam['b1']= 1./arcparam['disp']/slf._msarc[det-1].shape[0]
+        else:
+            msgs.error('Not ready for this disperser {:s}!'.format(disperser))
     else:
         msgs.error('ararc.setup_param: Not ready for this instrument {:s}!'.format(sname))
     # Load linelist

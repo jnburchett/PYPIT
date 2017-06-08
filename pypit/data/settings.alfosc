@@ -1,0 +1,157 @@
+### Mosaic properties
+mosaic ndet 1                         # Number of detectors in the mosaic
+mosaic latitude 28.7606               # Latitude of the telescope
+mosaic longitude -342.1184            # Longitude of the telescope (NOTE: West should correspond to positive longitudes)
+mosaic elevation 2326.0               # Elevation of the telescope (in m)
+mosaic minexp 0.4                     # Minimum exposure time (s)
+mosaic reduction ARMLSD               # Which reduction pipeline should be used for this instrument
+mosaic camera ALFOSC                  # This is used as part of the file name of certain output files /BMJ
+
+### Detector properties
+det01 xgap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the x pixel size -- x is predominantly the dispersion axis)
+det01 ygap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the y pixel size -- x is predominantly the dispersion axis)
+det01 ysize 1.0                       # The size of a pixel in the y-direction as a multiple of the x pixel size (i.e. xsize = 1.0 -- x is predominantly the dispersion axis)
+det01 darkcurr 1.3                    # Dark current (e-/hour)
+det01 platescale 0.2138               # arcsec per pixel in the spatial dimension for an unbinned pixel
+det01 saturation 700000.0             # The detector Saturation level
+det01 nonlinear 0.857                 # Percentage of detector range which is linear (i.e. everything above nonlinear*saturation will be flagged as saturated)
+det01 numamplifiers 1                 # Number of amplifiers
+det01 gain 0.16                       # Gain (e-/ADU) values for the numamplifiers amplifers
+det01 ronoise 4.0                     # RN (e-) for the numamplifiers amplifers
+det01 suffix _alfosc                  # Suffix to be appended to all saved calibration and extraction frames
+det01 datasec01 [:,1:2063]            # Either the data sections or the header keyword where the valid data sections can be obtained (Avoids bad region at top)
+det01 oscansec01 [20:399,2065:2102]   # Either the overscan sections or the header keyword where the valid overscan sections can be obtained
+
+### Checks to perform  (white space is removed)
+check 01.INSTRUME ALFOSC_FASU          # THIS IS A MUST! It checks the instrument
+check 02.NAXIS 2                       # THIS IS A MUST! It performs a standard check to make sure the data are 2D.
+check 01.DETNAME E2V CCD 231-42 2kx2k  # Check the CCD name (replace any spaces with underscores) (the "replace any spaces with underscores" help seems wrong! /BMJ)
+
+### Keyword Identifiers
+keyword time 01.DATE-OBS               # The time stamp of the observation (i.e. decimal MJD) (My ALFOSC data do no have MJD-OBS, so I'm using DATE-OBS and setting the format via "fits timeunit isot" below /BMJ)
+#
+keyword target 01.OBJECT               # Header keyword for the name given by the observer to a given frame
+keyword exptime 01.EXPTIME             # Exposure time keyword
+#keyword filter1 01.ALFLTNM             # Filter 1 (is this used for anything? /BMJ)
+#keyword filter2 01.FAFLTNM             # Filter 2 (is this used for anything? /BMJ)
+#keyword filter3 01.FBFLTNM             # Filter 3 (is this used for anything? /BMJ)
+keyword idname 01.IMAGETYP             # The keyword that identifies the frame type (i.e. bias, flat, etc.)
+keyword date 01.DATE-OBS               # The date of the observation (in the format YYYY-MM-DD  or  YYYY-MM-DDTHH:MM:SS.SS)
+keyword naxis0 02.NAXIS2               # Number of pixels along the zeroth axis
+keyword naxis1 02.NAXIS1               # Number of pixels along the first axis
+#keyword slitwid 01.ALAPRTNM            # Slit Width (is this used? will it work? value e.g. 'Slit_1.3' /BMJ)
+keyword decker 01.ALAPRTNM             # Which decker/slit/mask is being used (value e.g. 'Slit_1.3' /BMJ)
+keyword dispname 01.ALGRNM             # Grism name
+
+#keyword lamps 01.CAGLAMPS              # Lamps being used
+#keyword lampname01 MERCURY             # Name of a lamp
+#keyword lampstat01 01.MERCURY          # Status of a lamp
+#keyword lampname02 NEON                # Name of a lamp
+#keyword lampstat02 01.NEON             # Status of a lamp
+#keyword lampname03 ARGON               # Name of a lamp
+#keyword lampstat03 01.ARGON            # Status of a lamp
+#keyword lampname04 CADMIUM             # Name of a lamp
+#keyword lampstat04 01.CADMIUM          # Status of a lamp
+#keyword lampname05 ZINC                # Name of a lamp
+#keyword lampstat05 01.ZINC             # Status of a lamp
+#keyword lampname06 KRYPTON             # Name of a lamp
+#keyword lampstat06 01.KRYPTON          # Status of a lamp
+#keyword lampname07 XENON               # Name of a lamp
+#keyword lampstat07 01.XENON            # Status of a lamp
+#keyword lampname08 FEARGON             # Name of a lamp
+#keyword lampstat08 01.FEARGON          # Status of a lamp
+#keyword lampname09 DEUTERIUM           # Name of a lamp
+#keyword lampstat09 01.DEUTERI          # Status of a lamp
+#keyword lampname10 FLAMP1              # Name of a lamp
+#keyword lampstat10 01.FLAMP1           # Status of a lamp
+#keyword lampname11 FLAMP2              # Name of a lamp
+#keyword lampstat11 01.FLAMP2           # Status of a lamp
+#keyword lampname12 HALOGEN             # Name of a lamp
+#keyword lampstat12 01.HALOGEN          # Status of a lamp
+#keyword dispname 01.GRANAME            # Grating name
+#keyword dispangle 01.GRANGLE           # Grating angle
+
+#keyword lampname01 01.CAGLAMPS         # Name of a lamp
+#keyword echangle 01.GRATNG_O          # Echelle angle
+
+### Fits properties
+fits timeunit isot                  # The unit of keyword+time (s=seconds, m=minutes, h=hours, or any of the astropy Time formats) (isot is e.g. '2000-01-01T00:00:00.000' see http://docs.astropy.org/en/stable/time/#id3 /BMJ)
+fits dataext 1                      # Extension number of data
+fits numhead 2                      # How many headers need to be read in for a given file
+fits headext01 0                    # Extension number of header (one for each headnum, starting with 01)
+fits headext02 1                    # Extension number of header (one for each headnum, starting with 01)
+
+# Note /BMJ: some strange features (or bugs)
+# (1) the statements such as "science idname OBJECT" below do not seem to be used by arsort.py (they probably would be if one changed "run useIDname" from False to True in settings.baseargflag)
+# (2) if each frame type does not have at least one check below, the frame assignment by arsort.py will not work (for example, if there are no "pinhole check" checks, all frames will be identified as pinholes)
+
+# ### Science frames
+science idname OBJECT                  # Header key value of science frame for header keyword keyword+idname
+science check condition1 idname=OBJECT               # ...
+science check condition2 exptime>29 # Arbitrary exptime limit
+
+# ### Standard Star frames
+standard idname OBJECT                  # Header key value of standard frame for header keyword keyword+idname
+standard check condition1 idname=OBJECT               # ...
+standard check condition2 exptime>1 # Arbitrary exptime limit
+# standard check condition1 lamps=Off
+# standard match naxis0 =0             # Match the shape of standard and science frames
+# standard match naxis1 =0             # Match the shape of standard and science frames
+# standard match dispname ''             # Check the same decker as the science frame was used
+
+# standard check condition1 lampstat01=off&lampstat02=off&lampstat03=off&lampstat04=off&lampstat05=off&lampstat06=off&lampstat07=off&lampstat08=off&lampstat09=off&lampstat10=off&lampstat11=off&lampstat12=off
+# standard check condition2 hatch=open # Required for standard
+# standard match dichroic ''             # Check the same decker as the science frame was used
+# standard match binning ''             # Match the shape of standard and science frames
+# standard match dispangle |<=0.1        # Match the grating angle (no idea if this is reasonable for LRISr)
+# 
+# ### Bias/Dark frames
+bias idname BIAS                    # Header key value of bias frame for header keyword keyword+idname
+# bias check condition1 lampstat01=off&lampstat02=off&lampstat03=off&lampstat04=off&lampstat05=off&lampstat06=off&lampstat07=off&lampstat08=off&lampstat09=off&lampstat10=off&lampstat11=off&lampstat12=off
+# bias check condition2 hatch=closed  # Required for bias
+bias check condition1 idname=BIAS
+bias check condition2 exptime<1     # Required for bias
+# bias match binning ''             		# Match the shape of standard and science frames
+# 
+# ### Pixel Flat frames -- Dome Flat required
+pixelflat idname FLAT                 # Header key value of flat frame for header keyword keyword+idname
+pixelflat check condition1 idname=FLAT
+# pixelflat number 3                    # Number of flat frames to use
+# pixelflat check condition1 hatch=open   # Required for pixel flats
+# pixelflat check condition2 exptime<30   # Avoid stars
+# pixelflat check condition3 lampstat09=on|lampstat10=on|lampstat11=on|lampstat12=on
+# pixelflat match binning ''             		# Match the shape of standard and science frames
+# pixelflat match decker ''             # Check the same decker as the science frame was used
+# pixelflat match dichroic ''             # Check the same decker as the science frame was used
+# pixelflat match dispname ''             # Check the same decker as the science frame was used
+# pixelflat match dispangle |<=0.1        # Match the grating angle (no idea if this is reasonable for LRISr)
+
+# ### Pinhole frames
+pinhole check condition1 exptime>999999 # Avoids any pinhole frames
+
+# ### Dark frames
+dark check condition1 exptime>999999 # Avoids any dark frames
+
+# ### Trace frames
+# trace check condition1 hatch=open   # Required for blaze flats
+# trace check condition2 exptime<30   # Avoid stars
+# trace check condition3 lampstat09=on|lampstat10=on|lampstat11=on|lampstat12=on
+# trace match binning ''                 # Match the shape of trace with science
+# trace match decker ''             # Check the same decker as the science frame was used
+# trace match dichroic ''             # Check the same decker as the science frame was used
+# trace match dispname ''             # Check the same decker as the science frame was used
+# trace match dispangle |<=0.1        # Match the grating angle (no idea if this is reasonable for LRISr)
+trace check condition1 exptime>999999 # Avoids any trace frames
+
+# ### Arc frames
+arc idname WAVE                     # Header key value of arc frame for header keyword keyword+idname
+arc check condition1 idname=WAVE
+# arc check condition1 lampstat01=on|lampstat02=on|lampstat03=on|lampstat04=on|lampstat05=on|lampstat06=on|lampstat07=on|lampstat08=on
+# arc check condition2 hatch=closed # Required for arcs
+# arc match binning ''                 # Match the shape of arcs with science
+# arc match dichroic ''             # Check the same decker as the science frame was used
+# arc match dispname ''             # Check the same decker as the science frame was used
+# arc match dispangle |<=0.1           # Match the grating angle (no idea if this is reasonable for LRISr)
+
+# Make some changes to the arguments and flags
+settings trace dispersion direction 0
