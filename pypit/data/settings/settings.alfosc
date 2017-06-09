@@ -8,6 +8,7 @@ mosaic reduction ARMLSD               # Which reduction pipeline should be used 
 mosaic camera ALFOSC                  # This is used as part of the file name of certain output files /BMJ
 
 ### Detector properties
+det01 dataext01 1                     # Extension number of data
 det01 xgap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the x pixel size -- x is predominantly the dispersion axis)
 det01 ygap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the y pixel size -- x is predominantly the dispersion axis)
 det01 ysize 1.0                       # The size of a pixel in the y-direction as a multiple of the x pixel size (i.e. xsize = 1.0 -- x is predominantly the dispersion axis)
@@ -76,7 +77,6 @@ keyword dispname 01.ALGRNM             # Grism name
 
 ### Fits properties
 fits timeunit isot                  # The unit of keyword+time (s=seconds, m=minutes, h=hours, or any of the astropy Time formats) (isot is e.g. '2000-01-01T00:00:00.000' see http://docs.astropy.org/en/stable/time/#id3 /BMJ)
-fits dataext 1                      # Extension number of data
 fits numhead 2                      # How many headers need to be read in for a given file
 fits headext01 0                    # Extension number of header (one for each headnum, starting with 01)
 fits headext02 1                    # Extension number of header (one for each headnum, starting with 01)
