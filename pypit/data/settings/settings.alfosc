@@ -97,14 +97,15 @@ standard check condition2 exptime>1 # Arbitrary exptime limit
 # standard check condition1 lamps=Off
 # standard match naxis0 =0             # Match the shape of standard and science frames
 # standard match naxis1 =0             # Match the shape of standard and science frames
-# standard match dispname ''             # Check the same decker as the science frame was used
-
+standard match dispname ''             # Check the same decker as the science frame was used
+standard match naxis0 =0                 # Match the shape of standard with science
+standard match naxis1 =0                 # Match the shape of standard with science
 # standard check condition1 lampstat01=off&lampstat02=off&lampstat03=off&lampstat04=off&lampstat05=off&lampstat06=off&lampstat07=off&lampstat08=off&lampstat09=off&lampstat10=off&lampstat11=off&lampstat12=off
 # standard check condition2 hatch=open # Required for standard
 # standard match dichroic ''             # Check the same decker as the science frame was used
 # standard match binning ''             # Match the shape of standard and science frames
 # standard match dispangle |<=0.1        # Match the grating angle (no idea if this is reasonable for LRISr)
-# 
+
 # ### Bias/Dark frames
 bias idname BIAS                    # Header key value of bias frame for header keyword keyword+idname
 # bias check condition1 lampstat01=off&lampstat02=off&lampstat03=off&lampstat04=off&lampstat05=off&lampstat06=off&lampstat07=off&lampstat08=off&lampstat09=off&lampstat10=off&lampstat11=off&lampstat12=off
@@ -112,7 +113,9 @@ bias idname BIAS                    # Header key value of bias frame for header 
 bias check condition1 idname=BIAS
 bias check condition2 exptime<1     # Required for bias
 # bias match binning ''             		# Match the shape of standard and science frames
-# 
+bias match naxis0 =0                 # Match the shape of bias with science
+bias match naxis1 =0                 # Match the shape of bias with science
+
 # ### Pixel Flat frames -- Dome Flat required
 pixelflat idname FLAT                 # Header key value of flat frame for header keyword keyword+idname
 pixelflat check condition1 idname=FLAT
@@ -123,14 +126,20 @@ pixelflat check condition1 idname=FLAT
 # pixelflat match binning ''             		# Match the shape of standard and science frames
 # pixelflat match decker ''             # Check the same decker as the science frame was used
 # pixelflat match dichroic ''             # Check the same decker as the science frame was used
-# pixelflat match dispname ''             # Check the same decker as the science frame was used
+pixelflat match dispname ''             # Check the same decker as the science frame was used
 # pixelflat match dispangle |<=0.1        # Match the grating angle (no idea if this is reasonable for LRISr)
+pixelflat match naxis0 =0                 # Match the shape of pixelflat with science
+pixelflat match naxis1 =0                 # Match the shape of pixelflat with science
 
 # ### Pinhole frames
 pinhole check condition1 exptime>999999 # Avoids any pinhole frames
+pinhole match naxis0 =0                 # Match the shape of pinhole with science
+pinhole match naxis1 =0                 # Match the shape of pinhole with science
 
 # ### Dark frames
 dark check condition1 exptime>999999 # Avoids any dark frames
+dark match naxis0 =0                 # Match the shape of dark with science
+dark match naxis1 =0                 # Match the shape of dark with science
 
 # ### Trace frames
 # trace check condition1 hatch=open   # Required for blaze flats
@@ -139,9 +148,11 @@ dark check condition1 exptime>999999 # Avoids any dark frames
 # trace match binning ''                 # Match the shape of trace with science
 # trace match decker ''             # Check the same decker as the science frame was used
 # trace match dichroic ''             # Check the same decker as the science frame was used
-# trace match dispname ''             # Check the same decker as the science frame was used
+trace match dispname ''             # Check the same decker as the science frame was used
 # trace match dispangle |<=0.1        # Match the grating angle (no idea if this is reasonable for LRISr)
 trace check condition1 exptime>999999 # Avoids any trace frames
+trace match naxis0 =0                 # Match the shape of trace with science
+trace match naxis1 =0                 # Match the shape of trace with science
 
 # ### Arc frames
 arc idname WAVE                     # Header key value of arc frame for header keyword keyword+idname
@@ -150,8 +161,10 @@ arc check condition1 idname=WAVE
 # arc check condition2 hatch=closed # Required for arcs
 # arc match binning ''                 # Match the shape of arcs with science
 # arc match dichroic ''             # Check the same decker as the science frame was used
-# arc match dispname ''             # Check the same decker as the science frame was used
+arc match dispname ''             # Check the same decker as the science frame was used
 # arc match dispangle |<=0.1           # Match the grating angle (no idea if this is reasonable for LRISr)
+arc match naxis0 =0                 # Match the shape of arcs with science
+arc match naxis1 =0                 # Match the shape of arcs with science
 
 # Make some changes to the arguments and flags
 settings trace dispersion direction 0
