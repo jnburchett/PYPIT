@@ -38,3 +38,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Stuff added by Bo Milvang-Jensen
+.eggs/
+pypit.egg-info/
