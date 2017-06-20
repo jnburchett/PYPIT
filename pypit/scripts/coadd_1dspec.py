@@ -9,6 +9,7 @@ import pdb as debugger
 msgs = pyputils.get_dummy_logger()
 from numpy import isnan
 
+
 def parser(options=None):
 
     import argparse
@@ -148,5 +149,15 @@ def main(args, unit_test=False, path=''):
         exten = outfile.split('.')[-1]  # Allow for hdf or fits or whatever
         qafile = outfile.replace(exten, 'pdf')
         # Coadd!
+        debugger.set_trace()
         arcoadd.coadd_spectra(spectra, qafile=qafile, outfile=outfile, **gparam)
 
+
+def gen_popler(slf=None, spectra=None):
+    if slf is not None:
+        wave = spectra.data['wave'][i, :]  # 'wave', 'flux', 'sig'
+    elif spectra is not None:
+
+    else:
+        msgs.error("Cannot generate popler output within a science exposure class or XSpectra1D object")
+    return
