@@ -1,3 +1,5 @@
+# Note: this file is currently messy /BMJ
+
 ### Mosaic properties
 mosaic ndet 1                         # Number of detectors in the mosaic
 mosaic latitude 28.7606               # Latitude of the telescope
@@ -20,8 +22,18 @@ det01 numamplifiers 1                 # Number of amplifiers
 det01 gain 0.16                       # Gain (e-/ADU) values for the numamplifiers amplifers
 det01 ronoise 4.0                     # RN (e-) for the numamplifiers amplifers
 det01 suffix _alfosc                  # Suffix to be appended to all saved calibration and extraction frames
-det01 datasec01 [:,1:2063]            # Either the data sections or the header keyword where the valid data sections can be obtained (Avoids bad region at top)
-det01 oscansec01 [20:399,2065:2102]   # Either the overscan sections or the header keyword where the valid overscan sections can be obtained
+#
+# PROBLEM: The ALFOSC data have a different binning in x and y, but PYPIT cannot handle that. Therefore I hardcode a binning of 1 in 1 and 2 in y in the datasec01 and oscansec01 ... /BMJ
+# It's also a problem that the user can choose different readout windows, whereas I hardcode a width of 400 in the current oscansec01 ...
+# and ARGH, while these sections look like they are the usual IRAF notation, they are not! One has to switch x and y, and count from 0, not 1 ...
+# --- I wonder what happens if one uses a keyword: should the value of that also have x and y switched, and counting from 0???
+#
+#det01 datasec01 [:,1:2063]            # Either the data sections or the header keyword where the valid data sections can be obtained (Avoids bad region at top)
+#det01 oscansec01 [20:399,2065:2102]   # Either the overscan sections or the header keyword where the valid overscan sections can be obtained
+# det01 datasec01 [:,1:1031]            # Either the data sections or the header keyword where the valid data sections can be obtained (Avoids bad region at top)
+# det01 oscansec01 [11:399,1033:1051]   # Either the overscan sections or the header keyword where the valid overscan sections can be obtained
+det01 datasec01 [0:1030,:]            # Either the data sections or the header keyword where the valid data sections can be obtained (Avoids bad region at top)
+det01 oscansec01 [1032:1050,10:398]   # Either the overscan sections or the header keyword where the valid overscan sections can be obtained
 
 ### Checks to perform  (white space is removed)
 check 01.INSTRUME ALFOSC_FASU          # THIS IS A MUST! It checks the instrument
@@ -45,14 +57,14 @@ keyword decker 01.ALAPRTNM             # Which decker/slit/mask is being used (v
 keyword dispname 01.ALGRNM             # Grism name
 
 #keyword lamps 01.CAGLAMPS              # Lamps being used
-#keyword lampname01 MERCURY             # Name of a lamp
-#keyword lampstat01 01.MERCURY          # Status of a lamp
-#keyword lampname02 NEON                # Name of a lamp
-#keyword lampstat02 01.NEON             # Status of a lamp
-#keyword lampname03 ARGON               # Name of a lamp
-#keyword lampstat03 01.ARGON            # Status of a lamp
-#keyword lampname04 CADMIUM             # Name of a lamp
-#keyword lampstat04 01.CADMIUM          # Status of a lamp
+keyword lampname01 He                  # Name of a lamp
+keyword lampstat01 01.CLAMP1           # Status of a lamp
+keyword lampname02 Ne                  # Name of a lamp
+keyword lampstat02 01.CLAMP2           # Status of a lamp
+keyword lampname03 Halogen             # Name of a lamp
+keyword lampstat03 01.CLAMP3           # Status of a lamp
+keyword lampname04 ThAr                # Name of a lamp
+keyword lampstat04 01.CLAMP4           # Status of a lamp
 #keyword lampname05 ZINC                # Name of a lamp
 #keyword lampstat05 01.ZINC             # Status of a lamp
 #keyword lampname06 KRYPTON             # Name of a lamp
@@ -75,6 +87,8 @@ keyword dispname 01.ALGRNM             # Grism name
 #keyword lampname01 01.CAGLAMPS         # Name of a lamp
 #keyword echangle 01.GRATNG_O          # Echelle angle
 
+#keyword binning 01.BINNING              # Binning --- does not work: ALFOSC has different binning in x and y, keywords DETXBIN and DETYBIN ... one would likely need to write an ALFOSC-specific module, a la arlris.py
+
 ### Fits properties
 fits timeunit isot                  # The unit of keyword+time (s=seconds, m=minutes, h=hours, or any of the astropy Time formats) (isot is e.g. '2000-01-01T00:00:00.000' see http://docs.astropy.org/en/stable/time/#id3 /BMJ)
 fits numhead 2                      # How many headers need to be read in for a given file
@@ -84,16 +98,19 @@ fits headext02 1                    # Extension number of header (one for each h
 # Note /BMJ: some strange features (or bugs)
 # (1) the statements such as "science idname OBJECT" below do not seem to be used by arsort.py (they probably would be if one changed "run useIDname" from False to True in settings.baseargflag)
 # (2) if each frame type does not have at least one check below, the frame assignment by arsort.py will not work (for example, if there are no "pinhole check" checks, all frames will be identified as pinholes)
+# ... note added later: this may have changed ...
 
 # ### Science frames
 science idname OBJECT                  # Header key value of science frame for header keyword keyword+idname
-science check condition1 idname=OBJECT               # ...
-science check condition2 exptime>29 # Arbitrary exptime limit
+science check condition1 lampstat01=0&lampstat02=0&lampstat03=0&lampstat04=0
+science check condition2 idname=OBJECT               # ...
+science check condition3 exptime>299 # Arbitrary exptime limit !!!
 
 # ### Standard Star frames
-standard idname OBJECT                  # Header key value of standard frame for header keyword keyword+idname
-standard check condition1 idname=OBJECT               # ...
-standard check condition2 exptime>1 # Arbitrary exptime limit
+#standard idname OBJECT                  # Header key value of standard frame for header keyword keyword+idname
+standard check condition1 lampstat01=0&lampstat02=0&lampstat03=0&lampstat04=0
+#standard check condition2 idname=OBJECT               # ...
+standard check condition2 exptime<299 # Arbitrary exptime limit
 # standard check condition1 lamps=Off
 # standard match naxis0 =0             # Match the shape of standard and science frames
 # standard match naxis1 =0             # Match the shape of standard and science frames
@@ -110,15 +127,17 @@ standard match naxis1 =0                 # Match the shape of standard with scie
 bias idname BIAS                    # Header key value of bias frame for header keyword keyword+idname
 # bias check condition1 lampstat01=off&lampstat02=off&lampstat03=off&lampstat04=off&lampstat05=off&lampstat06=off&lampstat07=off&lampstat08=off&lampstat09=off&lampstat10=off&lampstat11=off&lampstat12=off
 # bias check condition2 hatch=closed  # Required for bias
-bias check condition1 idname=BIAS
-bias check condition2 exptime<1     # Required for bias
+bias check condition1 lampstat01=0&lampstat02=0&lampstat03=0&lampstat04=0
+bias check condition2 idname=BIAS
+bias check condition3 exptime<1     # Required for bias
 # bias match binning ''             		# Match the shape of standard and science frames
 bias match naxis0 =0                 # Match the shape of bias with science
 bias match naxis1 =0                 # Match the shape of bias with science
 
 # ### Pixel Flat frames -- Dome Flat required
-pixelflat idname FLAT                 # Header key value of flat frame for header keyword keyword+idname
-pixelflat check condition1 idname=FLAT
+#pixelflat idname FLAT                 # Header key value of flat frame for header keyword keyword+idname
+pixelflat check condition1 lampstat01=0&lampstat02=0&lampstat03=1&lampstat04=0
+#pixelflat check condition2 idname=FLAT,LAMP # a comma is not allowed, it seems ...
 # pixelflat number 3                    # Number of flat frames to use
 # pixelflat check condition1 hatch=open   # Required for pixel flats
 # pixelflat check condition2 exptime<30   # Avoid stars
@@ -155,8 +174,11 @@ trace match naxis0 =0                 # Match the shape of trace with science
 trace match naxis1 =0                 # Match the shape of trace with science
 
 # ### Arc frames
-arc idname WAVE                     # Header key value of arc frame for header keyword keyword+idname
-arc check condition1 idname=WAVE
+#arc idname WAVE                     # Header key value of arc frame for header keyword keyword+idname
+#arc check condition1 (lampstat01=1|lampstat02=1|lampstat04=1)&lampstat03=0
+arc check condition1 lampstat01=1|lampstat02=1|lampstat04=1
+arc check condition2 lampstat03=0
+#arc check condition3 idname=WAVE,LAMP # a comma is not allowed, it seems ...
 # arc check condition1 lampstat01=on|lampstat02=on|lampstat03=on|lampstat04=on|lampstat05=on|lampstat06=on|lampstat07=on|lampstat08=on
 # arc check condition2 hatch=closed # Required for arcs
 # arc match binning ''                 # Match the shape of arcs with science
