@@ -407,7 +407,8 @@ def generate_sensfunc(slf, scidx, specobjs, fitsdict, BALM_MASK_WID=5., nresln=2
     var_corr /= fitsdict['exptime'][scidx]**2
 
     # Grab closest standard within a tolerance
-    std_dict = find_standard_file((slf._msstd[0]['RA'], slf._msstd[0]['DEC']))
+    #std_dict = find_standard_file((slf._msstd[0]['RA'], slf._msstd[0]['DEC']))
+    std_dict = find_standard_file((slf._msstd[0]['RA'], slf._msstd[0]['DEC']), toler=400.*u.arcmin) # Tolerance changed from 20 to 400 arcmin /BMJ
     # Load standard
     load_standard_file(std_dict)
     # Interpolate onto observed wavelengths
