@@ -276,7 +276,10 @@ def setup_param(slf, sc, det, fitsdict):
         else:
             msgs.error('Not ready for this disperser {:s}!'.format(disperser))
     elif sname=='alfosc':
-        lamps=['HeI','NeI','ThI','ArI'] # Does ThI exist? /BMJ
+        # Note: ALFOSC has 3 arc lamps: He, Ne and ThAr, but there is no
+        # ThI file in PYPIT (would be data/arc_lines/NIST/ThI_vacuum.ascii)
+        # so I have had to remove 'ThI' from the list here: /BMJ
+        lamps=['HeI','NeI','ArI']
         if disperser == 'Grism_#4':
             arcparam['n_first']=1  #
             arcparam['disp']=3.3  # Ang per pixel (unbinned)
