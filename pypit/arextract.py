@@ -220,6 +220,7 @@ def obj_profiles(slf, det, specobjs, sciframe, varframe, skyframe, crmask,
             cr_rows = np.where(crspec > 0)[0]
             weight[cr_rows, :] = 0.
             #
+            msgs.info("Testing: Detector {0:d}, slit {1:2d}: number of good rows = {2:4d}".format(det, sl+1, len(gdrow)))
             if len(gdrow) > 100:  # Good S/N regime
                 msgs.info("Good S/N for profile")
                 # Eliminate low count regions
@@ -287,7 +288,7 @@ def obj_profiles(slf, det, specobjs, sciframe, varframe, skyframe, crmask,
                         ax.plot(xval, modelg, 'r')
                     plt.show()
                     debugger.set_trace()
-            elif len(gdrow) > 10:  #
+            elif len(gdrow) >= 0:  # limit changed from "> 10" to ">= 0" to avoid crach for gdrow=0
                 msgs.warn("Low extracted flux for obj={:s} in slit {:d}.  Not ready for Optimal".format(specobjs[sl][o].idx,sl+1))
                 scitrace[sl]['opt_profile'].append({})
                 continue
