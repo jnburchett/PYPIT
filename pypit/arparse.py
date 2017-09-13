@@ -2178,6 +2178,22 @@ class BaseSpect(BaseFunctions):
         frmtyp = ["standard", "bias", "pixelflat", "trace", "pinhole", "arc", "dark"]
         for ll in range(len(lstall)):
             lst = lstall[ll]
+            #
+            # To handle spaces in FITS header keyword names, e.g.
+            # - 'HIERARCH ESO DET CHIP1 NAME'
+            # - 'HIERARCH ESO DPR TYPE'
+            # in "check" and "keyword" lines iin the settings file, these keyword
+            # names were written replacing the spaces with underscores, and this
+            # will now be reversed:
+            if lst[0] == "check":
+                # For a "check" statement, the FITS keyword name is in position 1 (counting from 0)
+                # Example: lst = [u'check', u'01.HIERARCH_ESO_DET_CHIP1_NAME', u'MIT/LL', u'CCID-20']
+                lst[1] = lst[1].replace('_', ' ')
+            elif lst[0] == "keyword":
+                # For a "keyword" statement, the FITS keyword name is in position 2 (counting from 0)
+                # Example: lst = [u'keyword', u'esodprtype', u'01.HIERARCH_ESO_DPR_TYPE']
+                lst[2] = lst[2].replace('_', ' ')
+            #
             cnt = 1
             succeed = False
             members = [x for x, y in inspect.getmembers(self, predicate=inspect.ismethod)]
@@ -2852,6 +2868,72 @@ class BaseSpect(BaseFunctions):
 
     def keyword_equinox(self, v):
         """ The equinox to use
+
+        Parameters
+        ----------
+        v : str
+          value of the keyword argument given by the name of this function
+        """
+        v = key_keyword(v)
+        self.update(v)
+
+    def keyword_esodprcatg(self, v):
+        """ keyword HIERARCH ESO DPR CATG
+
+        Parameters
+        ----------
+        v : str
+          value of the keyword argument given by the name of this function
+        """
+        v = key_keyword(v)
+        self.update(v)
+
+    def keyword_esodprtech(self, v):
+        """ keyword HIERARCH ESO DPR TECH
+
+        Parameters
+        ----------
+        v : str
+          value of the keyword argument given by the name of this function
+        """
+        v = key_keyword(v)
+        self.update(v)
+
+    def keyword_esodprtype(self, v):
+        """ keyword HIERARCH ESO DPR TYPE
+
+        Parameters
+        ----------
+        v : str
+          value of the keyword argument given by the name of this function
+        """
+        v = key_keyword(v)
+        self.update(v)
+
+    def keyword_esolamp1name(self, v):
+        """ keyword HIERARCH ESO LAMP1 NAME
+
+        Parameters
+        ----------
+        v : str
+          value of the keyword argument given by the name of this function
+        """
+        v = key_keyword(v)
+        self.update(v)
+
+    def keyword_esolamp2name(self, v):
+        """ keyword HIERARCH ESO LAMP2 NAME
+
+        Parameters
+        ----------
+        v : str
+          value of the keyword argument given by the name of this function
+        """
+        v = key_keyword(v)
+        self.update(v)
+
+    def keyword_esolamp5name(self, v):
+        """ keyword HIERARCH ESO LAMP5 NAME
 
         Parameters
         ----------
@@ -3938,12 +4020,16 @@ def key_check(v):
     v : str, list
       A value used by the settings dictionary
     """
-    text = v.strip().replace('_', ' ')
-    if ',' in text and text[0:2] != '%,':
-        # There are multiple possibilities - split the text
-        v = text.split(',')
-    else:
-        v = text
+#     text = v.strip().replace('_', ' ')
+#     if ',' in text and text[0:2] != '%,':
+#         # There are multiple possibilities - split the text
+#         v = text.split(',')
+#     else:
+#         v = text
+#     return v
+    # I am making this a dummy function, since it messes up my X-shooter VIS work! /BMJ
+    # Ex 1: text='esolamp5name=VIS_FF_lamp': the underscores should not be changed to spaces
+    # Ex 2: text='esodprtype=STD,FLUX': this should not be split into ['esodprtype=STD', 'FLUX']
     return v
 
 

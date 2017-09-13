@@ -1,0 +1,139 @@
+### Mosaic properties
+mosaic ndet 1                         # Number of detectors in the mosaic
+mosaic latitude -24.627166666667      # Latitude of the telescope
+mosaic longitude +70.404830555556     # Longitude of the telescope (NOTE: West should correspond to positive longitudes)
+mosaic elevation 2635.43              # Elevation of the telescope (in m)
+mosaic reduction ARMED                # Which reduction pipeline should be used for this instrument
+mosaic minexp 0.0                     # Minimum exposure time (s)
+mosaic camera X-SHOOTER_VIS           # Camera name
+
+### Detector properties
+det01 xgap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the x pixel size -- x is predominantly the dispersion axis)
+det01 ygap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the y pixel size -- x is predominantly the dispersion axis)
+det01 ysize 1.0                       # The size of a pixel in the y-direction as a multiple of the x pixel size (i.e. xsize = 1.0 -- x is predominantly the dispersion axis)
+det01 platescale 0.15                 # arcsec per pixel in the spatial dimension for an unbinned pixel
+det01 darkcurr 0.0                    # Dark current (e-/hour) # TODO check
+det01 saturation 65000.0              # The detector Saturation level
+det01 nonlinear 1.0                   # Percentage of detector range which is linear (i.e. everything above nonlinear*saturation will be flagged as saturated) # TODO check
+det01 numamplifiers 1                 # Number of amplifiers # TODO check
+det01 gain 0.595                      # Gain (e-/ADU) values # TODO depends on the readout mode!
+det01 ronoise 3.1                     # RON (e-) # TODO depends on the readout mode!
+det01 dataext01 0                     # Extension number of the data
+det01 datasec01 [0:4000,10:2058]      # Either the data sections or the header keyword where the valid data sections can be obtained # TODO in IRAF notation: [11:2058,1:4000], and that's for an unbinned frame
+det01 oscansec01 [0:4000,2062:2106]   # Either the overscan sections or the header keyword where the valid overscan sections can be obtained # TODO in IRAF notation: [2063:2106,1:4000], and that's for an unbinned frame; also note that there's an overscan section on the left that I don't know how to enter (can you have two?)
+det01 suffix _VIS                     # Suffix to be appended to all saved calibration and extraction frames
+
+### Checks to perform
+# NOTE: A modification has been made to set_paramlist() in arparse.py to translate underscores to spaces in the keyword name for "check statements" in the settings file
+check 01.NAXIS 2                      # THIS IS A MUST! It performs a standard check to make sure the data are 2D.
+check 01.HIERARCH_ESO_DET_CHIP1_NAME MIT/LL CCID-20  # Check the CCD name
+
+### Keyword Identifiers
+# NOTE: A modification has been made to set_paramlist() in arparse.py to translate underscores to spaces in the keyword name for "keyword statements" in the settings file
+keyword target 01.OBJECT                # Header keyword for the name given by the observer to a given frame
+#keyword idname 01.OBSTYPE               # The keyword that identifies the frame type (i.e. bias, flat, etc.)
+keyword esodprtype 01.HIERARCH_ESO_DPR_TYPE  # Used in classifying ESO data
+keyword esodprtech 01.HIERARCH_ESO_DPR_TECH  # Used in classifying ESO data
+keyword esodprcatg 01.HIERARCH_ESO_DPR_CATG  # Used in classifying ESO data
+keyword time 01.MJD-OBS                 # The time stamp of the observation (i.e. decimal MJD)
+keyword date 01.DATE-OBS                # The date of the observation (in the format YYYY-MM-DD  or  YYYY-MM-DDTHH:MM:SS.SS)
+keyword equinox 01.EQUINOX              # The equinox to use
+keyword ra 01.RA                        # Right Ascension of the target
+keyword dec 01.DEC                      # Declination of the target
+keyword airmass 01.HIERARCH_ESO_TEL_AIRM_START  # Airmass at start of observation
+keyword naxis0 01.NAXIS2                # Number of pixels along the zeroth axis
+keyword naxis1 01.NAXIS1                # Number of pixels along the first axis
+#keyword binning 01.BINNING              # Binning # TODO X-shooter data do not necessarily have the same binning in x and y!!!
+#keyword binx 01.HIERARCH_ESO_DET_WIN1_BINX  # Binning in the x-direction (with x meaning the NAXIS1 direction) # TODO these are not used
+#keyword biny 01.HIERARCH_ESO_DET_WIN1_BINY  # Binning in the y-direction (with y meaning the NAXIS2 direction) # TODO these are not used
+keyword exptime 01.EXPTIME              # Exposure time keyword
+keyword decker 01.HIERARCH_ESO_INS_OPTI4_NAME  # Which decker is being used --- value might be: '0.9x11  ' for the 0.9 arcsec wide slit of length 11 arcsec
+keyword esolamp1name 01.HIERARCH_ESO_INS_LAMP1_NAME  # Which lamp is being used --- value might be: 'ThAr_Lamp' (for a slit arc)
+keyword esolamp2name 01.HIERARCH_ESO_INS_LAMP2_NAME  # Which lamp is being used --- value might be: 'ArHgNeXe_Lamp' (for an AFC arc)
+keyword esolamp5name 01.HIERARCH_ESO_INS_LAMP5_NAME  # Which lamp is being used --- value might be: 'VIS_FF_lamp' (for a flat)
+
+### Fits properties
+fits timeunit mjd                   # The unit of keyword+time (s=seconds, m=minutes, h=hours, mjd=MJD, dt=datetime)
+fits calwin 12.0                    # The window of time in hours to search for calibration frames for a science frame
+
+### Science frames
+science check condition1 esodprcatg=SCIENCE
+science check condition2 exptime>0   # Check that an exposure has been taken
+
+### Standard Star frames
+standard number 0                    # Number of standard star frames to use
+standard check condition1 esodprtype=STD,FLUX
+standard check condition2 exptime>0  # Check that an exposure has been taken
+
+### Bias frames
+bias number 0                       # Number of bias frames to use
+bias check condition1 esodprtype=BIAS
+bias check condition2 esodprtech=IMAGE
+bias check condition3 esodprcatg=CALIB
+bias check condition4 exptime=0     # Check the exposure time is 0 seconds
+bias match naxis0 =0                # Match the row binning of bias and science frames
+bias match naxis1 =0                # Match the column binning of bias and science frames
+
+### Dark frames
+dark check condition1 esodprtype=DARK
+dark check condition2 esodprtech=IMAGE
+dark check condition3 esodprcatg=CALIB
+dark check condition4 exptime>0     # Check that an exposure has been taken
+dark match naxis0 =0                # Match the row binning of dark and science frames
+dark match naxis1 =0                # Match the column binning of dark and science frames
+
+### Pixel Flat frames
+pixelflat number 5                    # Number of flat frames to use
+pixelflat check condition1 esodprtype=LAMP,FLAT
+pixelflat check condition2 esodprtech=ECHELLE,SLIT
+pixelflat check condition3 esodprcatg=CALIB
+pixelflat check condition4 esolamp5name=VIS_FF_lamp # NOTE: the value of the keyword contains underscores
+pixelflat match naxis0 =0             # Match the row binning of flats with science
+pixelflat match naxis1 =0             # Match the column binning of flats with science
+pixelflat match decker ''             # Check the same decker as the science frame was used
+
+### Pinhole frames (in the ESO X-shooter manual called order-definition frames or pinhole flats)
+pinhole number 1                    # Number of pinhole frames to use # TODO is that the right number?
+pinhole check condition1 esodprtype=LAMP,ORDERDEF
+pinhole check condition2 esodprtech=ECHELLE,PINHOLE
+pinhole check condition3 esodprcatg=CALIB
+pinhole check condition4 esolamp5name=VIS_FF_lamp # NOTE: the value of the keyword contains underscores
+pinhole check condition5 decker=Pin_0.5   # Check that the decker name is set to Pinhole # NOTE: the value of the keyword contains underscores
+pinhole match naxis0 =0             # Match the row binning of pinhole with science
+pinhole match naxis1 =0             # Match the column binning of pinhole with science
+
+### Trace frames --- the same as Pixel Flat frames!
+trace number 5                    # Number of flat frames to use
+trace check condition1 esodprtype=LAMP,FLAT
+trace check condition2 esodprtech=ECHELLE,SLIT
+trace check condition3 esodprcatg=CALIB
+trace check condition4 esolamp5name=VIS_FF_lamp # NOTE: the value of the keyword contains underscores
+trace match naxis0 =0             # Match the row binning of flats with science
+trace match naxis1 =0             # Match the column binning of flats with science
+trace match decker ''             # Check the same decker as the science frame was used
+
+### Arc frames --- note: in X-shooter language these are the slit arcs (not the arcs, not the multipinhole arcs)
+arc number 1                        # Number of arc frames to use
+arc check condition1 esodprtype=LAMP,WAVE
+arc check condition2 esodprtech=ECHELLE,SLIT
+arc check condition3 esodprcatg=CALIB
+arc check condition4 esolamp1name=ThAr_Lamp # NOTE: the value of the keyword contains underscores
+arc match naxis0 =0                 # Match the row binning of arcs with science
+arc match naxis1 =0                 # Match the column binning of arcs with science
+arc match decker ''                 # Check the same decker as the science frame was used
+
+# Make some changes to the arguments and flags
+#settings reduce flatfield 2dpca 4
+settings trace dispersion direction 0
+settings bias useframe overscan
+#settings trace useframe pinhole # This was used in settings.levy
+settings trace slits sigdetect 100.0
+settings trace slits fracignore 0.7
+settings trace slits polyorder  7
+settings trace slits pca extrapolate pos 3
+settings trace slits pca extrapolate neg 3
+settings trace slits pca params [5,2,2,1,0,0,0]
+settings trace slits tilts params [0,2,1]
+settings trace slits tilts disporder 2
+settings trace slits pad 1
+settings trace object params [1,3]
