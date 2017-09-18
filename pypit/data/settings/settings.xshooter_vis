@@ -24,33 +24,33 @@ det01 oscansec01 [0:4000,2062:2106]   # Either the overscan sections or the head
 det01 suffix _VIS                     # Suffix to be appended to all saved calibration and extraction frames
 
 ### Checks to perform
-# NOTE: A modification has been made to set_paramlist() in arparse.py to translate underscores to spaces in the keyword name for "check statements" in the settings file
+### Encode possible spaces in the FITS keywords (e.g. 'HIERARCH ESO DET CHIP1 NAME' ) as dots
 check 01.NAXIS 2                      # THIS IS A MUST! It performs a standard check to make sure the data are 2D.
-check 01.HIERARCH_ESO_DET_CHIP1_NAME MIT/LL CCID-20  # Check the CCD name
+check 01.HIERARCH.ESO.DET.CHIP1.NAME MIT/LL CCID-20  # Check the CCD name
 
 ### Keyword Identifiers
-# NOTE: A modification has been made to set_paramlist() in arparse.py to translate underscores to spaces in the keyword name for "keyword statements" in the settings file
+### Encode possible spaces in the FITS keywords (e.g. 'HIERARCH ESO DPR TYPE') as dots
 keyword target 01.OBJECT                # Header keyword for the name given by the observer to a given frame
-#keyword idname 01.OBSTYPE               # The keyword that identifies the frame type (i.e. bias, flat, etc.)
-keyword esodprtype 01.HIERARCH_ESO_DPR_TYPE  # Used in classifying ESO data
-keyword esodprtech 01.HIERARCH_ESO_DPR_TECH  # Used in classifying ESO data
-keyword esodprcatg 01.HIERARCH_ESO_DPR_CATG  # Used in classifying ESO data
+#keyword idname 01.HIERARCH.ESO.DPR.TECH  # The keyword that identifies the frame type (i.e. bias, flat, etc.)
+keyword esodprtype 01.HIERARCH.ESO.DPR.TYPE  # Used in classifying ESO data
+keyword esodprtech 01.HIERARCH.ESO.DPR.TECH  # Used in classifying ESO data
+keyword esodprcatg 01.HIERARCH.ESO.DPR.CATG  # Used in classifying ESO data
 keyword time 01.MJD-OBS                 # The time stamp of the observation (i.e. decimal MJD)
 keyword date 01.DATE-OBS                # The date of the observation (in the format YYYY-MM-DD  or  YYYY-MM-DDTHH:MM:SS.SS)
 keyword equinox 01.EQUINOX              # The equinox to use
 keyword ra 01.RA                        # Right Ascension of the target
 keyword dec 01.DEC                      # Declination of the target
-keyword airmass 01.HIERARCH_ESO_TEL_AIRM_START  # Airmass at start of observation
+keyword airmass 01.HIERARCH.ESO.TEL.AIRM.START  # Airmass at start of observation
 keyword naxis0 01.NAXIS2                # Number of pixels along the zeroth axis
 keyword naxis1 01.NAXIS1                # Number of pixels along the first axis
 #keyword binning 01.BINNING              # Binning # TODO X-shooter data do not necessarily have the same binning in x and y!!!
-#keyword binx 01.HIERARCH_ESO_DET_WIN1_BINX  # Binning in the x-direction (with x meaning the NAXIS1 direction) # TODO these are not used
-#keyword biny 01.HIERARCH_ESO_DET_WIN1_BINY  # Binning in the y-direction (with y meaning the NAXIS2 direction) # TODO these are not used
+#keyword binx 01.HIERARCH.ESO.DET.WIN1.BINX  # Binning in the x-direction (with x meaning the NAXIS1 direction) # TODO these are not used
+#keyword biny 01.HIERARCH.ESO.DET.WIN1.BINY  # Binning in the y-direction (with y meaning the NAXIS2 direction) # TODO these are not used
 keyword exptime 01.EXPTIME              # Exposure time keyword
-keyword decker 01.HIERARCH_ESO_INS_OPTI4_NAME  # Which decker is being used --- value might be: '0.9x11  ' for the 0.9 arcsec wide slit of length 11 arcsec
-keyword esolamp1name 01.HIERARCH_ESO_INS_LAMP1_NAME  # Which lamp is being used --- value might be: 'ThAr_Lamp' (for a slit arc)
-keyword esolamp2name 01.HIERARCH_ESO_INS_LAMP2_NAME  # Which lamp is being used --- value might be: 'ArHgNeXe_Lamp' (for an AFC arc)
-keyword esolamp5name 01.HIERARCH_ESO_INS_LAMP5_NAME  # Which lamp is being used --- value might be: 'VIS_FF_lamp' (for a flat)
+keyword decker 01.HIERARCH.ESO.INS.OPTI4.NAME  # Which decker is being used --- value might be: '0.9x11  ' for the 0.9 arcsec wide slit of length 11 arcsec
+keyword esolamp1name 01.HIERARCH.ESO.INS.LAMP1.NAME  # Which lamp is being used --- value might be: 'ThAr_Lamp' (for a slit arc)
+keyword esolamp2name 01.HIERARCH.ESO.INS.LAMP2.NAME  # Which lamp is being used --- value might be: 'ArHgNeXe_Lamp' (for an AFC arc)
+keyword esolamp5name 01.HIERARCH.ESO.INS.LAMP5.NAME  # Which lamp is being used --- value might be: 'VIS_FF_lamp' (for a flat)
 
 ### Fits properties
 fits timeunit mjd                   # The unit of keyword+time (s=seconds, m=minutes, h=hours, mjd=MJD, dt=datetime)

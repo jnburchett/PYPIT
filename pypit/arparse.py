@@ -2178,22 +2178,48 @@ class BaseSpect(BaseFunctions):
         frmtyp = ["standard", "bias", "pixelflat", "trace", "pinhole", "arc", "dark"]
         for ll in range(len(lstall)):
             lst = lstall[ll]
-            #
-            # To handle spaces in FITS header keyword names, e.g.
-            # - 'HIERARCH ESO DET CHIP1 NAME'
-            # - 'HIERARCH ESO DPR TYPE'
-            # in "check" and "keyword" lines iin the settings file, these keyword
-            # names were written replacing the spaces with underscores, and this
-            # will now be reversed:
+            # Handle possible spaces in FITS keywords (e.g. 'HIERARCH ESO DPR TYPE'),
+            # which in the settings file (in "check" and "keyword" statements) are
+            # encoded as dots (a character not allowed in FITS keywords, so no loss
+            # of generality there): replace such dots by spaces, but do not remove
+            # the dot between the FITS extension number and the FITS keyword name.
+            # Example of such statements from a settings file:
+            #   check 01.HIERARCH.ESO.DET.CHIP1.NAME MIT/LL CCID-20
+            #   keyword idname 01.HIERARCH.ESO.DPR.TECH
+            # Decide which element of lst we need to look at, if any
             if lst[0] == "check":
-                # For a "check" statement, the FITS keyword name is in position 1 (counting from 0)
-                # Example: lst = [u'check', u'01.HIERARCH_ESO_DET_CHIP1_NAME', u'MIT/LL', u'CCID-20']
-                lst[1] = lst[1].replace('_', ' ')
+                # Example: lst = ['check', '01.HIERARCH.ESO.DET.CHIP1.NAME', 'MIT/LL', 'CCID-20']
+                # --- note the FITS keyword name is part of element 1 (counting from 0)
+                extno_and_keywordname_position = 1
+                decoding_needed = True
             elif lst[0] == "keyword":
-                # For a "keyword" statement, the FITS keyword name is in position 2 (counting from 0)
-                # Example: lst = [u'keyword', u'esodprtype', u'01.HIERARCH_ESO_DPR_TYPE']
-                lst[2] = lst[2].replace('_', ' ')
-            #
+                # Example: lst = ['keyword', 'idname', '01.HIERARCH.ESO.DPR.TECH']
+                # --- note the FITS keyword name is part of element 2 (counting from 0)
+                extno_and_keywordname_position = 2
+                decoding_needed = True
+            else:
+                decoding_needed = False
+            # Do the decoding, if needed
+            if decoding_needed:
+                extno_and_keywordname_str = lst[extno_and_keywordname_position]
+                if extno_and_keywordname_str == "None":
+                    # This is needed since before the settings file is parsed, this
+                    # function is called with e.g.
+                    #   lst = ['keyword', 'equinox', 'None']
+                    # and only when the settings file is parsed the function is
+                    # called with actual input, e.g.
+                    #   lst = ['keyword', 'equinox', '01.EQUINOX']
+                    pass
+                elif '.' in extno_and_keywordname_str:
+                    # The string, e.g. '01.EQUINOX' or '01.HIERARCH.ESO.DPR.TECH',
+                    # contains at least one dot: change all dots but the first to spaces:
+                    # output e.g. '01.EQUINOX' or '01.HIERARCH ESO DPR TECH'
+                    extno_and_keywordname_str_split = extno_and_keywordname_str.split(".")
+                    extno_str = extno_and_keywordname_str_split[0] # E.g. '01'
+                    keywordname_str = " ".join(extno_and_keywordname_str_split[1:]) # E.g. 'EQUINOX' or 'HIERARCH ESO DPR TECH'
+                    lst[extno_and_keywordname_position] = extno_str + '.'  + keywordname_str
+                else:
+                    msgs.error("Likely syntax error in settings file, we expected a dot in this string: extno_and_keywordname_str = "+extno_and_keywordname_str)
             cnt = 1
             succeed = False
             members = [x for x, y in inspect.getmembers(self, predicate=inspect.ismethod)]
