@@ -143,6 +143,7 @@ arc match naxis1 =0                 # Match the column binning of arcs with scie
 arc match decker ''                 # Check the same decker as the science frame was used
 
 # Make some changes to the arguments and flags
+settings run useIDname True # As is clear from the above, we are using idname to sort the frames (and settings.baseargflag has "run useIDname False" at the moment)
 #settings reduce flatfield 2dpca 4
 settings trace dispersion direction 0
 settings bias useframe overscan
