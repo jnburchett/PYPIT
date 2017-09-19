@@ -5,7 +5,7 @@ mosaic longitude +70.404830555556     # Longitude of the telescope (NOTE: West s
 mosaic elevation 2635.43              # Elevation of the telescope (in m)
 mosaic reduction ARMED                # Which reduction pipeline should be used for this instrument
 mosaic minexp 0.0                     # Minimum exposure time (s)
-mosaic camera X-SHOOTER_VIS           # Camera name
+mosaic camera X-SHOOTER_VIS           # Camera name # TODO is this used for anything?
 
 ### Detector properties
 det01 xgap 0.0                        # Gap between the square detector pixels (expressed as a fraction of the x pixel size -- x is predominantly the dispersion axis)
@@ -26,15 +26,12 @@ det01 suffix _VIS                     # Suffix to be appended to all saved calib
 ### Checks to perform
 ### Encode possible spaces in the FITS keywords (e.g. 'HIERARCH ESO DET CHIP1 NAME' ) as dots
 check 01.NAXIS 2                      # THIS IS A MUST! It performs a standard check to make sure the data are 2D.
-check 01.HIERARCH.ESO.DET.CHIP1.NAME MIT/LL CCID-20  # Check the CCD name
+check 01.HIERARCH.ESO.DET.CHIP1.NAME MIT/LL CCID-20  # Check the CCD name --- note that spaces are allowed (unencoded/unescaped) in the value, here "MIT/LL CCID-20"
 
 ### Keyword Identifiers
 ### Encode possible spaces in the FITS keywords (e.g. 'HIERARCH ESO DPR TYPE') as dots
 keyword target 01.OBJECT                # Header keyword for the name given by the observer to a given frame
-#keyword idname 01.HIERARCH.ESO.DPR.TECH  # The keyword that identifies the frame type (i.e. bias, flat, etc.)
-keyword esodprtype 01.HIERARCH.ESO.DPR.TYPE  # Used in classifying ESO data
-keyword esodprtech 01.HIERARCH.ESO.DPR.TECH  # Used in classifying ESO data
-keyword esodprcatg 01.HIERARCH.ESO.DPR.CATG  # Used in classifying ESO data
+keyword idname 01.HIERARCH.ESO.DPR.TYPE # The keyword that identifies the frame type (i.e. bias, flat, etc.) --- ideally, X-shooter data are classified using two additional keywords (DPR.TECH, DPR.CATG), but we'll do without them
 keyword time 01.MJD-OBS                 # The time stamp of the observation (i.e. decimal MJD)
 keyword date 01.DATE-OBS                # The date of the observation (in the format YYYY-MM-DD  or  YYYY-MM-DDTHH:MM:SS.SS)
 keyword equinox 01.EQUINOX              # The equinox to use
@@ -43,81 +40,104 @@ keyword dec 01.DEC                      # Declination of the target
 keyword airmass 01.HIERARCH.ESO.TEL.AIRM.START  # Airmass at start of observation
 keyword naxis0 01.NAXIS2                # Number of pixels along the zeroth axis
 keyword naxis1 01.NAXIS1                # Number of pixels along the first axis
-#keyword binning 01.BINNING              # Binning # TODO X-shooter data do not necessarily have the same binning in x and y!!!
-#keyword binx 01.HIERARCH.ESO.DET.WIN1.BINX  # Binning in the x-direction (with x meaning the NAXIS1 direction) # TODO these are not used
-#keyword biny 01.HIERARCH.ESO.DET.WIN1.BINY  # Binning in the y-direction (with y meaning the NAXIS2 direction) # TODO these are not used
+#keyword binning 01.BINNING              # Binning # TODO X-shooter data do not necessarily have the same binning in x and y! The actual binning is recorded in HIERARCH.ESO.DET.WIN1.BINX HIERARCH.ESO.DET.WIN1.BINY
+#keyword keyword_binningspatial  01.HIERARCH.ESO.DET.WIN1.BINX  # TODO check if these are implemented in PYPIT! For X-shooter VIS raw frames, x ~ spatial, y ~ spectral (and VIS frames with "1x2" binning would have BINX=1, BINY=2)
+#keyword keyword_binningspectral 01.HIERARCH.ESO.DET.WIN1.BINY  # TODO check if these are implemented in PYPIT! For X-shooter VIS raw frames, x ~ spatial, y ~ spectral (and VIS frames with "1x2" binning would have BINX=1, BINY=2)
 keyword exptime 01.EXPTIME              # Exposure time keyword
-keyword decker 01.HIERARCH.ESO.INS.OPTI4.NAME  # Which decker is being used --- value might be: '0.9x11  ' for the 0.9 arcsec wide slit of length 11 arcsec
-keyword esolamp1name 01.HIERARCH.ESO.INS.LAMP1.NAME  # Which lamp is being used --- value might be: 'ThAr_Lamp' (for a slit arc)
-keyword esolamp2name 01.HIERARCH.ESO.INS.LAMP2.NAME  # Which lamp is being used --- value might be: 'ArHgNeXe_Lamp' (for an AFC arc)
-keyword esolamp5name 01.HIERARCH.ESO.INS.LAMP5.NAME  # Which lamp is being used --- value might be: 'VIS_FF_lamp' (for a flat)
+keyword decker 01.HIERARCH.ESO.INS.OPTI4.NAME  # Which decker is being used, X-shooter: science slits e.g. = 0.7x11, 0.9x11, 1.2x11, 5.0x11, single pinhole = Pin_0.5, multi-pinhole = Pin_row; note that UVB/VIS/NIR = OPTI3/OPTI4/OPTI5
 
 ### Fits properties
 fits timeunit mjd                   # The unit of keyword+time (s=seconds, m=minutes, h=hours, mjd=MJD, dt=datetime)
 fits calwin 12.0                    # The window of time in hours to search for calibration frames for a science frame
 
 ### Science frames
-science check condition1 esodprcatg=SCIENCE
-science check condition2 exptime>0   # Check that an exposure has been taken
+# Note: X-shooter science frames (slit, not IFU) have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE = OBJECT
+# - DPR.TECH = ECHELLE,SLIT,STARE ECHELLE,SLIT,NODDING ECHELLE,SLIT,OFFSET
+# - DPR.CATG = SCIENCE
+# but we're only using DPR.TYPE (=idname) here
+science idname OBJECT                # Header keyword value that identifies this type of frame
+science check condition1 exptime>0   # Check that an exposure has been taken
 
 ### Standard Star frames
+# Note: X-shooter flux std star frames have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE = STD,FLUX
+# - DPR.TECH = ECHELLE,SLIT,NODDING ECHELLE,SLIT,OFFSET
+# - DPR.CATG = CALIB
+# but we're only using DPR.TYPE (=idname) here
+standard idname STD,FLUX             # Header keyword value that identifies this type of frame
 standard number 0                    # Number of standard star frames to use
-standard check condition1 esodprtype=STD,FLUX
-standard check condition2 exptime>0  # Check that an exposure has been taken
+standard check condition1 exptime>0  # Check that an exposure has been taken
 
 ### Bias frames
+# Note: X-shooter bias frames have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE = BIAS
+# - DPR.TECH = IMAGE
+# - DPR.CATG = CALIB
+# but we're only using DPR.TYPE (=idname) here
+bias idname BIAS                    # Header keyword value that identifies this type of frame
 bias number 0                       # Number of bias frames to use
-bias check condition1 esodprtype=BIAS
-bias check condition2 esodprtech=IMAGE
-bias check condition3 esodprcatg=CALIB
-bias check condition4 exptime=0     # Check the exposure time is 0 seconds
+bias check condition1 exptime=0     # Check the exposure time is 0 seconds
 bias match naxis0 =0                # Match the row binning of bias and science frames
 bias match naxis1 =0                # Match the column binning of bias and science frames
 
 ### Dark frames
-dark check condition1 esodprtype=DARK
-dark check condition2 esodprtech=IMAGE
-dark check condition3 esodprcatg=CALIB
-dark check condition4 exptime>0     # Check that an exposure has been taken
+# Note: X-shooter dark frames have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE = DARK
+# - DPR.TECH = IMAGE
+# - DPR.CATG = CALIB
+# but we're only using DPR.TYPE (=idname) here
+dark idname DARK                    # Header keyword value that identifies this type of frame
+dark check condition1 exptime>0     # Check that an exposure has been taken
 dark match naxis0 =0                # Match the row binning of dark and science frames
 dark match naxis1 =0                # Match the column binning of dark and science frames
 
 ### Pixel Flat frames
+# Note: X-shooter slit flat frames have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE =
+#              UVB: LAMP,DFLAT LAMP,QFLAT
+#              VIS: LAMP,FLAT
+#              NIR: LAMP,FLAT
+# - DPR.TECH = ECHELLE,SLIT
+# - DPR.CATG = CALIB
+# but we're only using DPR.TYPE (=idname) here
+pixelflat idname LAMP,FLAT            # Header keyword value that identifies this type of frame
 pixelflat number 5                    # Number of flat frames to use
-pixelflat check condition1 esodprtype=LAMP,FLAT
-pixelflat check condition2 esodprtech=ECHELLE,SLIT
-pixelflat check condition3 esodprcatg=CALIB
-pixelflat check condition4 esolamp5name=VIS_FF_lamp # NOTE: the value of the keyword contains underscores
 pixelflat match naxis0 =0             # Match the row binning of flats with science
 pixelflat match naxis1 =0             # Match the column binning of flats with science
 pixelflat match decker ''             # Check the same decker as the science frame was used
 
 ### Pinhole frames (in the ESO X-shooter manual called order-definition frames or pinhole flats)
+# Note: X-shooter pinhole flat frames have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE =
+#              UVB: LAMP,DORDERDEF LAMP,QORDERDEF
+#              VIS: LAMP,ORDERDEF
+#              NIR: LAMP,ORDERDEF
+# - DPR.TECH = ECHELLE,PINHOLE
+# - DPR.CATG = CALIB
+# but we're only using DPR.TYPE (=idname) here
+pinhole idname LAMP,ORDERDEF        # Header keyword value that identifies this type of frame
 pinhole number 1                    # Number of pinhole frames to use # TODO is that the right number?
-pinhole check condition1 esodprtype=LAMP,ORDERDEF
-pinhole check condition2 esodprtech=ECHELLE,PINHOLE
-pinhole check condition3 esodprcatg=CALIB
-pinhole check condition4 esolamp5name=VIS_FF_lamp # NOTE: the value of the keyword contains underscores
-pinhole check condition5 decker=Pin_0.5   # Check that the decker name is set to Pinhole # NOTE: the value of the keyword contains underscores
+pinhole check condition1 decker=Pin_0.5  # Check that the decker name is set to Pinhole # NOTE: the value of the keyword contains underscores # NOTE: We probably don't need to check this, the idname check should be enough
 pinhole match naxis0 =0             # Match the row binning of pinhole with science
 pinhole match naxis1 =0             # Match the column binning of pinhole with science
 
 ### Trace frames --- the same as Pixel Flat frames!
+trace idname LAMP,FLAT            # Header keyword value that identifies this type of frame
 trace number 5                    # Number of flat frames to use
-trace check condition1 esodprtype=LAMP,FLAT
-trace check condition2 esodprtech=ECHELLE,SLIT
-trace check condition3 esodprcatg=CALIB
-trace check condition4 esolamp5name=VIS_FF_lamp # NOTE: the value of the keyword contains underscores
 trace match naxis0 =0             # Match the row binning of flats with science
 trace match naxis1 =0             # Match the column binning of flats with science
 trace match decker ''             # Check the same decker as the science frame was used
 
-### Arc frames --- note: in X-shooter language these are the slit arcs (not the arcs, not the multipinhole arcs)
+### Arc frames --- note: in X-shooter language these are the slit arcs (not the multipinhole arcs, which have DPR.TECH=ECHELLE,MULTI-PINHOLE and decker=Pin_row)
+# Note: X-shooter slit arc frames have (cf. xshoo-pipeline-manual-12.16.pdf pp. 44-46, although the table is not fully correct):
+# - DPR.TYPE = LAMP,WAVE
+# - DPR.TECH = ECHELLE,SLIT
+# - DPR.CATG = CALIB
+# but we're only using DPR.TYPE (=idname) here
+arc idname LAMP,WAVE                # Header keyword value that identifies this type of frame
 arc number 1                        # Number of arc frames to use
-arc check condition1 esodprtype=LAMP,WAVE
-arc check condition2 esodprtech=ECHELLE,SLIT
-arc check condition3 esodprcatg=CALIB
-arc check condition4 esolamp1name=ThAr_Lamp # NOTE: the value of the keyword contains underscores
+arc check condition1 decker!=Pin_row  # Check that the decker name is NOT set to Pin_row # NOTE: the value of the keyword contains underscores # NOTE: We need to check this, to remove the multipinhole arcs!
 arc match naxis0 =0                 # Match the row binning of arcs with science
 arc match naxis1 =0                 # Match the column binning of arcs with science
 arc match decker ''                 # Check the same decker as the science frame was used

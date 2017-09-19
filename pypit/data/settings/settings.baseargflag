@@ -12,7 +12,7 @@ run  directory qa     QA         # Child Directory name for quality assurance
 run  qa     False         # Run quality control in real time? (setting this to False will still produce the checks, but won't display the results during the reduction).
 run  preponly     False         # If True, ARMLSD will prepare the calibration frames and will only reduce the science frames when preponly is set to False
 run  stopcheck    False         # If True, ARMLSD will stop and require a user carriage return at every quality control check
-run  useIDname   False         # If True, file sorting will ensure that the idname is made
+run  useIDname   True          # If True, file sorting will ensure that the idname is made
 
 # REDUCTION RULES
 reduce calibrate nonlinear False          # Perform a non-linear correction
