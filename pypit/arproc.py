@@ -945,9 +945,65 @@ def reduce_echelle(slf, sciframe, scidx, fitsdict, det,
             bgframe += tbgframe
         modelvarframe = variance_frame(slf, det, sciframe, scidx, fitsdict, skyframe=bgframe)
 
+    # ------------------------------------------------------------------------------
+    msgs.work("BMJ testing: sending images to Ginga (should be started like this beforehand: ginga --modules=RC &")
+    from ginga.util import grc
+    ginga_host = 'localhost'
+    ginga_port = 9000
+    from future.utils import bytes_to_native_str # Ginga strings have to be native strings, not unicode strings, at least here in Python 2.7
+    from ginga.util import grc
+    ginga_host = 'localhost'
+    ginga_port = 9000
+    ginga_image_str = bytes_to_native_str(b'Image')
+    # ginga1 = sciframe
+    ginga1_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga1_ch = ginga1_viewer.channel(ginga_image_str)
+    ginga1_infostr = bytes_to_native_str(b'sciframe_det={0:d}'.format(det))
+    ginga1_ch.load_np(ginga1_infostr, sciframe, 'fits', {})
+    # ginga2 = bgframe
+    ginga2_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga2_ch = ginga2_viewer.channel(ginga_image_str)
+    ginga2_infostr = bytes_to_native_str(b'bgframe_det={0:d}'.format(det))
+    ginga2_ch.load_np(ginga2_infostr, bgframe, 'fits', {})
+    # ginga3 = rawvarframe
+    ginga3_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga3_ch = ginga3_viewer.channel(ginga_image_str)
+    ginga3_infostr = 'rawvarframe_det={0:d}'.format(det)
+    ginga3_infostr = bytes_to_native_str(b'rawvarframe_det={0:d}'.format(det))
+    ginga3_ch.load_np(ginga3_infostr, rawvarframe, 'fits', {})
+    # ginga4 = modelvarframe
+    ginga4_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga4_ch = ginga4_viewer.channel(ginga_image_str)
+    ginga4_infostr = bytes_to_native_str(b'modelvarframe_det={0:d}'.format(det))
+    ginga4_ch.load_np(ginga4_infostr, modelvarframe, 'fits', {})
+    # ginga5 = skysubframe
+    skysubframe = sciframe - bgframe
+    ginga5_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga5_ch = ginga5_viewer.channel(ginga_image_str)
+    ginga5_infostr = bytes_to_native_str(b'skysubframe_det={0:d}'.format(det))
+    ginga5_ch.load_np(ginga5_infostr, skysubframe, 'fits', {})
+    #
+    bmj_save_det = det
+    # ------------------------------------------------------------------------------
     # Perform an optimal extraction
-    return reduce_frame(slf, sciframe, rawvarframe, modelvarframe, bgframe, scidx, fitsdict, det, crmask,
+#     return reduce_frame(slf, sciframe, rawvarframe, modelvarframe, bgframe, scidx, fitsdict, det, crmask,
+#                         scitrace=scitrace, standard=standard)
+    reduce_frame_return_value =  reduce_frame(slf, sciframe, rawvarframe, modelvarframe, bgframe, scidx, fitsdict, det, crmask,
                         scitrace=scitrace, standard=standard)
+    # ------------------------------------------------------------------------------
+    msgs.work("BMJ testing: sending more images to Ginga, now after the call to reduce_frame()")
+    # ginga6 = slf._bgframe
+    ginga6_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga6_ch = ginga6_viewer.channel(ginga_image_str)
+    ginga6_infostr = bytes_to_native_str(b'slf._bgframe_det={0:d}'.format(det))
+    ginga6_ch.load_np(ginga6_infostr, slf._bgframe[det-1], 'fits', {})
+    # ginga7 = slf._modelvarframe
+    ginga7_viewer = grc.RemoteClient(ginga_host, ginga_port)
+    ginga7_ch = ginga7_viewer.channel(ginga_image_str)
+    ginga7_infostr = bytes_to_native_str(b'slf._modelvarframe_det={0:d}'.format(det))
+    ginga7_ch.load_np(ginga7_infostr, slf._modelvarframe[det-1], 'fits', {})
+    # ------------------------------------------------------------------------------
+    return reduce_frame_return_value
 
 
 def reduce_multislit(slf, sciframe, scidx, fitsdict, det, standard=False):
