@@ -62,6 +62,9 @@ def background_subtraction(slf, sciframe, varframe, slitn, det, refine=0.0):
         debugger.set_trace()
         nl, nr = 0, 0
         return np.zeros_like(sciframe), nl, nr
+    # Obtain all pixels that are within the slit edges, and the opposite
+    indices_pixels_in_this_slit = np.where((slf._slitpix[det - 1] == slitn + 1))
+    indices_pixels_not_in_this_slit = np.where(~(slf._slitpix[det - 1] == slitn + 1))
     # Calculate the oversampled object profiles
     oversampling_factor = 3 # should be an integer according to the description in object_profile()
     xedges, modvals = object_profile(slf, sciframe, slitn, det, refine=refine, factor=oversampling_factor)
@@ -114,6 +117,25 @@ def background_subtraction(slf, sciframe, varframe, slitn, det, refine=0.0):
     # Find background pixels and fit
     wbgpix_spatval = np.where((spatval <= float(nl)/npix) | (spatval >= float(npix-nr)/npix)) # this cannot be used to index the 2D array tilts
     wbgpix = (word[0][wbgpix_spatval], word[1][wbgpix_spatval]) # this may be approproate for indexing the 2D array tilts
+#     # ------------------------------------------------------------------------------
+#     msgs.work("BMJ testing: in background_subtraction(): sending images to Ginga (should be started like this beforehand: ginga --modules=RC &")
+#     from future.utils import bytes_to_native_str # Ginga strings have to be native strings, not unicode strings, at least here in Python 2.7
+#     from ginga.util import grc
+#     ginga_host = 'localhost'
+#     ginga_port = 9000
+#     ginga_image_str = bytes_to_native_str(b'Image')
+#     #
+#     # Calculate 2D array with value 1 for the pixels used in the background fit
+#     # TODO this array should be returned by this function /BMJ
+#     bgpixels = np.zeros_like(tilts)
+#     bgpixels[wbgpix] = 1
+#     #
+#     # ginga1 = bgpixels
+#     ginga1_viewer = grc.RemoteClient(ginga_host, ginga_port)
+#     ginga1_ch = ginga1_viewer.channel(ginga_image_str)
+#     ginga1_infostr = bytes_to_native_str(b'bgpixels_det={0:d}_slitno={1:d}'.format(det,slitn+1))
+#     ginga1_ch.load_np(ginga1_infostr, bgpixels, 'fits', {})
+#     # ------------------------------------------------------------------------------
     if settings.argflag['reduce']['skysub']['method'].lower() == 'bspline':
         msgs.info("Using bspline sky subtraction")
         srt = np.argsort(tilts[wbgpix])
@@ -122,8 +144,11 @@ def background_subtraction(slf, sciframe, varframe, slitn, det, refine=0.0):
         mask, bspl = arutils.robust_polyfit(tilts[wbgpix][srt], sciframe[wbgpix][srt], 3, function='bspline',
                                             weights=np.sqrt(ivar)[wbgpix][srt], sigma=5.,
                                             maxone=False, **settings.argflag['reduce']['skysub']['bspline'])
+        # TODO I think the following 2 lines are wrong (at least if left alone), we should only evaluate the sky fit on the pixels in this "slit"! /BMJ
         bgf_flat = arutils.func_val(bspl, tilts.flatten(), 'bspline')
         bgframe = bgf_flat.reshape(tilts.shape)
+        # Quick fix: set all pixels not in this slit to zero (but it would be better only to evaluate the background fit on the pixels in the slit)
+        bgframe[indices_pixels_not_in_this_slit] = 0.
         if msgs._debug['sky_sub']:
             def plt_bspline_sky(tilts, scifrcp, bgf_flat):
                 # Setup
@@ -947,9 +972,6 @@ def reduce_echelle(slf, sciframe, scidx, fitsdict, det,
 
     # ------------------------------------------------------------------------------
     msgs.work("BMJ testing: sending images to Ginga (should be started like this beforehand: ginga --modules=RC &")
-    from ginga.util import grc
-    ginga_host = 'localhost'
-    ginga_port = 9000
     from future.utils import bytes_to_native_str # Ginga strings have to be native strings, not unicode strings, at least here in Python 2.7
     from ginga.util import grc
     ginga_host = 'localhost'
@@ -982,8 +1004,6 @@ def reduce_echelle(slf, sciframe, scidx, fitsdict, det,
     ginga5_ch = ginga5_viewer.channel(ginga_image_str)
     ginga5_infostr = bytes_to_native_str(b'skysubframe_det={0:d}'.format(det))
     ginga5_ch.load_np(ginga5_infostr, skysubframe, 'fits', {})
-    #
-    bmj_save_det = det
     # ------------------------------------------------------------------------------
     # Perform an optimal extraction
 #     return reduce_frame(slf, sciframe, rawvarframe, modelvarframe, bgframe, scidx, fitsdict, det, crmask,
