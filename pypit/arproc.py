@@ -1015,12 +1015,12 @@ def reduce_echelle(slf, sciframe, scidx, fitsdict, det,
     # ginga6 = slf._bgframe
     ginga6_viewer = grc.RemoteClient(ginga_host, ginga_port)
     ginga6_ch = ginga6_viewer.channel(ginga_image_str)
-    ginga6_infostr = bytes_to_native_str(b'slf._bgframe_det={0:d}'.format(det))
+    ginga6_infostr = bytes_to_native_str(b'slf_bgframe_det={0:d}'.format(det)) # Was slf._bgframe_det= but the dot is problematic for Ginga (save file pluging)
     ginga6_ch.load_np(ginga6_infostr, slf._bgframe[det-1], 'fits', {})
     # ginga7 = slf._modelvarframe
     ginga7_viewer = grc.RemoteClient(ginga_host, ginga_port)
     ginga7_ch = ginga7_viewer.channel(ginga_image_str)
-    ginga7_infostr = bytes_to_native_str(b'slf._modelvarframe_det={0:d}'.format(det))
+    ginga7_infostr = bytes_to_native_str(b'slf_modelvarframe_det={0:d}'.format(det)) # Was slf._bgframe_det= but the dot is problematic for Ginga (save file pluging)
     ginga7_ch.load_np(ginga7_infostr, slf._modelvarframe[det-1], 'fits', {})
     # ------------------------------------------------------------------------------
     return reduce_frame_return_value

@@ -2069,8 +2069,8 @@ def echelle_tilt(slf, msarc, det, pcadesc="PCA trace of the spectral tilts", mas
             null, tcoeff = arutils.robust_polyfit(xtfit[wmask], ytfit[wmask],
                                                   settings.argflag['trace']['slits']['tilts']['order'], sigma=2.0)
             # Save the tilt angle
-            tiltang[j, o] = tcoeff[1]  # tan(tilt angle)
-            centval[j, o] = tcoeff[0]  # centroid of arc line
+            tiltang[j, o] = -tcoeff[1]  # tan(tilt angle) --- BMJ: added the minus as suggested by rcooke-ast
+            centval[j, o] =  tcoeff[0]  # centroid of arc line
 
     msgs.info("Fitting tilt angles")
     tcoeff = np.ones((settings.argflag['trace']['slits']['tilts']['disporder'] + 1, tiltang.shape[1]))
