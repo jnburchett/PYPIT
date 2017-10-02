@@ -1554,7 +1554,7 @@ def refine_traces(binarr, outpar, extrap_cent, extrap_diff, extord, orders,
 
 
 def trace_tilt(slf, det, msarc, slitnum, censpec=None, maskval=-999999.9,
-               trthrsh=1000.0, nsmth=0, method = "fweight"):
+               trthrsh=1000.0, nsmth=0, method="fweight"):
     """
     This function performs a PCA analysis on the arc tilts for a single spectrum (or order)
                trthrsh=1000.0, nsmth=0):
@@ -2040,13 +2040,21 @@ def echelle_tilt(slf, msarc, det, pcadesc="PCA trace of the spectral tilts", mas
         if maskslit[o] == 1:
             continue
         # Determine the tilts for this slit
-        trcdict = trace_tilt(slf, det, msarc, o, censpec=arccen[:, slitcnt])
+        trcdict = trace_tilt(slf, det, msarc, o, censpec=arccen[:, slitcnt], nsmth=3)
         slitcnt += 1
+        #trcdict = trace_tilt(slf, det, msarc, o, censpec=arccen[:, o], nsmth=3)
         if trcdict is None:
             # No arc lines were available to determine the spectral tilt
             continue
+
+        # Extract information from the trace dictionary
         aduse = trcdict["aduse"]
         arcdet = trcdict["arcdet"]
+        xtfits = trcdict["xtfit"]
+        ytfits = trcdict["ytfit"]
+        wmasks = trcdict["wmask"]
+        badlines = trcdict["badlines"]
+
         if tiltang is None:
             tiltang = maskval * np.ones((aduse.size, norders))
             centval = maskval * np.ones((aduse.size, norders))
@@ -2056,21 +2064,50 @@ def echelle_tilt(slf, msarc, det, pcadesc="PCA trace of the spectral tilts", mas
                 tiltang = np.append(tiltang, maskval * np.ones((aduse.size-totnum, norders)), axis=0)
                 centval = np.append(centval, maskval * np.ones((aduse.size-totnum, norders)), axis=0)
                 totnum = aduse.size
-        for j in range(aduse.size):
+
+        # Analyze each spectral line
+        for j in range(arcdet.size):
             if not aduse[j]:
                 continue
-            lrdiff = slf._rordloc[det-1][arcdet[j], o] - slf._lordloc[det-1][arcdet[j], o]
-            xtfit = 2.0 * (trcdict["xtfit"][j]-slf._lordloc[det-1][arcdet[j], o])/lrdiff - 1.0
-            ytfit = trcdict["ytfit"][j]
-            wmask = trcdict["wmask"][j]
+            xtfit = xtfits[j]
+            ytfit = ytfits[j]
+            wmask = wmasks[j]
+            xint = int(xtfit[0])
+            sz = (xtfit.size-1)//2
+
+            # Fit the tilt along one spectral line
+            wmfit = np.where(ytfit != maskval)
+            if wmfit[0].size > settings.argflag['trace']['slits']['tilts']['order'] + 1:
+                cmfit = arutils.func_fit(xtfit[wmfit], ytfit[wmfit], settings.argflag['trace']['slits']['function'],
+                                         settings.argflag['trace']['slits']['tilts']['order'],
+                                         minv=0.0, maxv=msarc.shape[1] - 1.0)
+                model = arutils.func_val(cmfit, xtfit, settings.argflag['trace']['slits']['function'],
+                                         minv=0.0, maxv=msarc.shape[1] - 1.0)
+            else:
+                maskslit[o] = 1
+                badlines += 1
+                continue
+
+            if maskval in model:
+                # Model contains masked values
+                maskslit[o] = 1
+                badlines += 1
+                continue
+
             if wmask.size < settings.argflag['trace']['slits']['tilts']['order']+2:
                 maskslit[o] = 1
                 continue
-            null, tcoeff = arutils.robust_polyfit(xtfit[wmask], ytfit[wmask],
-                                                  settings.argflag['trace']['slits']['tilts']['order'], sigma=2.0)
+
+            # Perform a robust polynomial fit to the traces
+            lrdiff = slf._rordloc[det-1][arcdet[j], o] - slf._lordloc[det-1][arcdet[j], o]
+            xfit = 2.0 * (xtfit[wmask]-slf._lordloc[det-1][arcdet[j], o])/lrdiff - 1.0
+            yfit = (2.0 * model[sz] - ytfit[wmask]) / (msarc.shape[0] - 1.0)
+            wmsk, tcoeff = arutils.robust_polyfit(xfit, yfit,
+                                                  settings.argflag['trace']['slits']['tilts']['order'],
+                                                  sigma=2.0, minv=-1.0, maxv=1.0)
             # Save the tilt angle
-            tiltang[j, o] = tcoeff[1]  # tan(tilt angle)
-            centval[j, o] = tcoeff[0]  # centroid of arc line
+            tiltang[j, o] = (msarc.shape[0] - 1.0) * tcoeff[1]  # tan(tilt angle)
+            centval[j, o] = (msarc.shape[0] - 1.0) * tcoeff[0]  # centroid of arc line
 
     msgs.info("Fitting tilt angles")
     tcoeff = np.ones((settings.argflag['trace']['slits']['tilts']['disporder'] + 1, tiltang.shape[1]))
@@ -2088,13 +2125,13 @@ def echelle_tilt(slf, msarc, det, pcadesc="PCA trace of the spectral tilts", mas
             null, tempc = arutils.robust_polyfit(centval[:, o][w], tiltang[:, o][w],
                                                  settings.argflag['trace']['slits']['tilts']['disporder'],
                                                  function=settings.argflag['trace']['slits']['function'], sigma=2.0,
-                                                 minv=0.0, maxv=msarc.shape[0] - 1)
+                                                 minv=0.0, maxv=(msarc.shape[0] - 1.0))
             tcoeff[:, o] = tempc
     # Sort which orders are masked
     maskord.sort()
     xv = np.arange(msarc.shape[0])
     tiltval = arutils.func_val(tcoeff, xv, settings.argflag['trace']['slits']['function'],
-                               minv=0.0, maxv=msarc.shape[0] - 1).T
+                               minv=0.0, maxv=(msarc.shape[0] - 1.0)).T
     ofit = settings.argflag['trace']['slits']['tilts']['params']
     lnpc = len(ofit) - 1
     if np.sum(1.0 - extrap_ord) > ofit[0] + 1:  # Only do a PCA if there are enough good orders
