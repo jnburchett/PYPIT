@@ -22,7 +22,7 @@ debug = ardebug.init()
 #debug['trace'] = True
 #debug['obj_profile'] = True
 #debug['trace_obj'] = True
-#debug['tilts'] = True
+debug['tilts'] = True
 #debug['flexure'] = True
 #debug['no_qa'] = True
 

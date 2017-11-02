@@ -1107,7 +1107,7 @@ def set_qa_filename(root, method, det=None, slit=None, prefix=None):
     elif method == 'pca_plot':  # This is root for multiple PNGs
         outfile = 'QA/PNGs/{:s}_pca_{:s}_'.format(prefix, root)
     elif method == 'pca_arctilt':  # This is root for multiple PNGs
-        outfile = 'QA/PNGs/Arc_pca_{:s}_'.format(root)
+        outfile = 'QA/PNGs/Arc_pcares_{:s}_'.format(root)
     elif method == 'plot_orderfits_Blaze':  # This is root for multiple PNGs
         outfile = 'QA/PNGs/Blaze_{:s}_'.format(root)
     elif method == 'obj_trace_qa':
