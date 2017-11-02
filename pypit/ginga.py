@@ -1,6 +1,21 @@
 """ Module for ginga routines.  Mainly for debugging
 """
-from __future__ import (print_function, absolute_import, division, unicode_literals)
+# BMJ: I have commented "from __future__ import unicode_literals" out, since
+# it breaks the Ginga code under Python 2.7, because apparently,
+# Ginga strings have to be native strings, not unicode strings.
+# If one insists on "from __future__ import unicode_literals" in Python 2.7,
+# one needs to use bytes_to_native_str(b'foo') for all strings passed to
+# Ginga, e.g.
+#   from future.utils import bytes_to_native_str
+#   canvas.add(bytes_to_native_str(b'path'), foopoints,
+#     color=bytes_to_native_str(b'red'))
+# For the canvas drawing Ginga will crash with the wrong strings. For just
+# displaying an image in a tab supposed to be called "ArcTilts", the wrong
+# type of string will just result in the tab being called "#UNDEFINED".
+# 
+#from __future__ import (print_function, absolute_import, division, unicode_literals)
+from __future__ import (print_function, absolute_import, division)
+
 
 import os
 import numpy as np
@@ -146,7 +161,7 @@ def show_trace(viewer, ch, trace, trc_name, color='blue', clear=False):
     canvas.add('text', float(trace[ohf]), float(y[ohf]), trc_name,
                rot_deg=90., color=color, fontsize=17.)
 
-def chk_arc_tilts(msarc, trcdict, sedges=None, yoff=0., xoff=0.):
+def chk_arc_tilts(msarc, trcdict, sedges=None, yoff=0., xoff=0., clearcanvas=True):
     """  Display arc image and overlay the arcline tilt measurements
     Parameters
     ----------
@@ -158,6 +173,8 @@ def chk_arc_tilts(msarc, trcdict, sedges=None, yoff=0., xoff=0.):
     xoff : float, optional
       In case Ginga has an index offset.  It appears not to
     yoff : float, optional
+    clearcanvas : boolean, optional
+      Setting it to false allows to keep the drawing for all orders/slits
 
 
     Returns
@@ -172,7 +189,8 @@ def chk_arc_tilts(msarc, trcdict, sedges=None, yoff=0., xoff=0.):
     # Show image, clear canvas [in case this is a repeat]
     name='image'
     ch.load_np(name, msarc, 'fits', {})
-    canvas.clear()
+    if clearcanvas: # BMJ: now there's the option to (not) clear
+        canvas.clear()
     # Show a trace
     ntrc = len(trcdict['arcdet'])
     for idx in range(ntrc):

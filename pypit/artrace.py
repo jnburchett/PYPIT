@@ -2045,6 +2045,12 @@ def echelle_tilt(slf, msarc, det, pcadesc="PCA trace of the spectral tilts", mas
         if trcdict is None:
             # No arc lines were available to determine the spectral tilt
             continue
+        # ------------------------------------------------------------------------------
+        if msgs._debug['tilts']:
+            msgs.info("BMJ testing: debugging tilts")
+            debugger.chk_arc_tilts(msarc, trcdict, sedges=(slf._lordloc[det-1][:,o], slf._rordloc[det-1][:,o]), clearcanvas=False)
+            debugger.set_trace()
+        # ------------------------------------------------------------------------------
         aduse = trcdict["aduse"]
         arcdet = trcdict["arcdet"]
         if tiltang is None:
